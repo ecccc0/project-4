@@ -59,7 +59,7 @@ void initialise()
 
 void processInput() 
 {
-    gCurrentScene->getState().xochitl->resetMovement();
+    gCurrentScene->getState().->resetMovement();
 
     if      (IsKeyDown(KEY_A)) gCurrentScene->getState().->moveLeft();
     else if (IsKeyDown(KEY_D)) gCurrentScene->getState().->moveRight();
