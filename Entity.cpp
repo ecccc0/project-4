@@ -275,7 +275,7 @@ void Entity::update(float deltaTime, Entity *player, Map *map,
     mVelocity.y += mAcceleration.y * deltaTime;
     
 
-    if (mAIType == FLYER)
+    if (mAIType != FLYER || mEntityType == PLAYER)
     {
         mVelocity.y += mAcceleration.y * deltaTime;
     }

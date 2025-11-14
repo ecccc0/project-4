@@ -40,6 +40,8 @@ void LevelThree::initialise()
         PLAYER
     );
     
+    mGameState.player->setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
+    mGameState.player->setJumpingPower(700.0f); 
     /*
         ----------- CAMERA -----------
     */
