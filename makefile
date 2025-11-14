@@ -52,4 +52,3 @@ clean:
 # Run rule
 run: $(TARGET)
 	$(EXEC)
-	$(EXEC)

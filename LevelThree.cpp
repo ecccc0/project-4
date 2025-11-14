@@ -1,4 +1,8 @@
 #include "LevelThree.h"
+#include "cs3113.h" // For types/helpers if needed
+
+// Function from main.cpp that we will call
+extern void handlePlayerDeath();
 
 LevelThree::LevelThree()                                      : Scene { {0.0f}, nullptr   } {}
 LevelThree::LevelThree(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
@@ -10,13 +14,12 @@ void LevelThree::initialise()
     // Start with no automatic scene change; let gameplay decide when to switch
     mGameState.nextSceneID = -1;
 
-    mGameState.bgm = LoadMusicStream("");
-    SetMusicVolume(mGameState.bgm, 0.33f);
-    // PlayMusicStream(gState.bgm);
+    // BGM is handled globally in main.cpp now
 
-    mGameState.jumpSound = LoadSound("");
-    mGameState.deathSound = LoadSound("");
-    mGameState.winSound  = LoadSound("");
+    // Load SFX using shared assets
+    mGameState.jumpSound = LoadSound("assets/Dirt Jump.wav");
+    mGameState.deathSound = LoadSound("assets/Death Sound.ogg");
+    mGameState.winSound  = LoadSound("assets/level_win.wav");
 
     /*
         ----------- MAP -----------
@@ -41,7 +44,33 @@ void LevelThree::initialise()
     );
     
     mGameState.player->setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
-    mGameState.player->setJumpingPower(700.0f); 
+    mGameState.player->setJumpingPower(500.0f); 
+
+    // ----------- ENEMIES -----------
+    mGameState.enemyCount = 2;
+    mGameState.enemies = new Entity[mGameState.enemyCount];
+
+    // Enemy 0: WANDERER on a platform
+    mGameState.enemies[0].setPosition({ mOrigin.x - TILE_DIMENSION * 2, mOrigin.y - TILE_DIMENSION * 2 });
+    mGameState.enemies[0].setScale({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
+    mGameState.enemies[0].setColliderDimensions({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
+    mGameState.enemies[0].setTexture("assets/enemy_wander.png");
+    mGameState.enemies[0].setEntityType(NPC);
+    mGameState.enemies[0].setAIType(WANDERER);
+    mGameState.enemies[0].setAIState(WALKING);
+    mGameState.enemies[0].setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
+    mGameState.enemies[0].setSpeed(100);
+
+    // Enemy 1: FOLLOWER on a higher ledge
+    mGameState.enemies[1].setPosition({ mOrigin.x + TILE_DIMENSION * 4, mOrigin.y - TILE_DIMENSION * 3 });
+    mGameState.enemies[1].setScale({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
+    mGameState.enemies[1].setColliderDimensions({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
+    mGameState.enemies[1].setTexture("assets/enemy_follow.png");
+    mGameState.enemies[1].setEntityType(NPC);
+    mGameState.enemies[1].setAIType(FOLLOWER);
+    mGameState.enemies[1].setAIState(IDLE);
+    mGameState.enemies[1].setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
+    mGameState.enemies[1].setSpeed(120);
     /*
         ----------- CAMERA -----------
     */
@@ -58,11 +87,33 @@ void LevelThree::update(float deltaTime)
 
     mGameState.player->update(
         deltaTime,      // delta time / fixed timestep
-        nullptr,        // player
+        mGameState.player,        // player
         mGameState.map, // map
-        nullptr,        // collidable entities
-        0               // col. entity count
+        mGameState.enemies,        // collidable entities
+        mGameState.enemyCount               // col. entity count
     );
+
+    // Update enemies
+    for (int i = 0; i < mGameState.enemyCount; i++)
+    {
+        mGameState.enemies[i].update(
+            deltaTime,
+            mGameState.player,
+            mGameState.map,
+            nullptr,
+            0
+        );
+    }
+
+    // Player/enemy collision check
+    for (int i = 0; i < mGameState.enemyCount; i++)
+    {
+        if (mGameState.enemies[i].isActive() && mGameState.player->isColliding(&mGameState.enemies[i]))
+        {
+            handlePlayerDeath();
+            return;
+        }
+    }
 
     Vector2 currentPlayerPosition = { mGameState.player->getPosition().x, mOrigin.y };
 
@@ -75,6 +126,11 @@ void LevelThree::render()
 {
     ClearBackground(ColorFromHex(mBGColourHexCode));
 
+    for (int i = 0; i < mGameState.enemyCount; i++)
+    {
+        mGameState.enemies[i].render();
+    }
+    
     mGameState.player->render();
     mGameState.map->render();
 }

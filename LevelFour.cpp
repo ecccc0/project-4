@@ -15,19 +15,17 @@ void LevelFour::initialise()
    mGameState.enemyCount = 0;
    mGameState.enemies = nullptr;
 
-   mGameState.bgm = LoadMusicStream("assets/game/07 - Final Defeat.wav"); // Boss music
-   SetMusicVolume(mGameState.bgm, 0.40f);
-   PlayMusicStream(mGameState.bgm);
+   // BGM is handled globally in main.cpp now
 
-   mGameState.jumpSound = LoadSound("assets/game/Dirt Jump.wav");
-   mGameState.deathSound = LoadSound("assets/game/player_death.wav"); 
-   mGameState.winSound = LoadSound("assets/game/level_win.wav");
+   mGameState.jumpSound = LoadSound("assets/Dirt Jump.wav");
+   mGameState.deathSound = LoadSound("assets/Death Sound.ogg"); 
+   mGameState.winSound = LoadSound("assets/level_win.wav");
 
    /*
       ----------- MAP -----------
    */
-   mGameState.map = new Map(
-      LEVELFOUR_WIDTH, LEVELFOUR_HEIGHT,   // map grid cols & rows
+    mGameState.map = new Map(
+        LEVELFOUR_WIDTH, LEVELFOUR_HEIGHT,   // map grid cols & rows
       (unsigned int *) mLevelData, // grid data
       "assets/tileset.png",        // texture filepath
       TILE_DIMENSION,              // tile size
@@ -38,21 +36,18 @@ void LevelFour::initialise()
    /*
       ----------- PROTAGONIST -----------
    */
-   std::map<Direction, std::vector<int>> playerAnimations;
-   playerAnimations[RIGHT] = { 0, 1, 2, 3 };
-   playerAnimations[LEFT]  = { 4, 5, 6, 7 };
-   playerAnimations[UP]    = { 0 }; 
-   playerAnimations[DOWN]  = { 0 }; 
+
    
-   mGameState.player = new Entity(
-        { mOrigin.x - (LEVELONE_WIDTH * TILE_DIMENSION / 4.0f), mOrigin.y }, 
+     mGameState.player = new Entity(
+        { mOrigin.x - (LEVELONE_WIDTH * TILE_DIMENSION / 4.0f), mOrigin.y - 50.0f }, 
         { TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f }, 
         "assets/player.png",     
         PLAYER
     );
+
    
    mGameState.player->setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
-   mGameState.player->setJumpingPower(700.0f); 
+   mGameState.player->setJumpingPower(550.0f); 
    
    /*
       ----------- BOSS -----------
@@ -60,14 +55,18 @@ void LevelFour::initialise()
    mGameState.enemyCount = 1;
    mGameState.enemies = new Entity[mGameState.enemyCount];
    
-      // Spawn the Boss (a fast flyer) using default constructor then configure
-      mGameState.enemies[0].setPosition({ mOrigin.x, mOrigin.y - TILE_DIMENSION * 2 });
-      mGameState.enemies[0].setScale({ TILE_DIMENSION * 1.5f, TILE_DIMENSION * 1.5f });
-      mGameState.enemies[0].setTexture("assets/enemy_fly.png");
-      mGameState.enemies[0].setEntityType(NPC);
-      mGameState.enemies[0].setAIType(FLYER);
-      mGameState.enemies[0].setAIState(WALKING); // Will patrol
-      mGameState.enemies[0].setSpeed(250); // Make it fast
+   // Configure the default-constructed Entity allocated in the array
+   mGameState.enemies[0].setPosition({ mOrigin.x, mOrigin.y - TILE_DIMENSION * 2 }); // Start in middle
+   mGameState.enemies[0].setScale({ TILE_DIMENSION * 1.5f, TILE_DIMENSION * 1.5f }); // Make it bigger
+   mGameState.enemies[0].setColliderDimensions({ TILE_DIMENSION * 1.5f, TILE_DIMENSION * 1.5f });
+   mGameState.enemies[0].setTexture("assets/enemy_fly.png"); // Use flyer texture (or a new boss texture)
+   // Keep the boss as an NPC so collision/stomp logic works, but make it stationary
+   mGameState.enemies[0].setEntityType(NPC);
+   mGameState.enemies[0].setAIType(FLYER);
+   mGameState.enemies[0].setAIState(IDLE);    // Don't patrol
+   mGameState.enemies[0].setAcceleration({ 0.0f, 0.0f }); // No gravity
+   mGameState.enemies[0].resetMovement();
+   mGameState.enemies[0].setSpeed(0); // No movement
    
    /*
       ----------- CAMERA -----------
@@ -83,14 +82,16 @@ void LevelFour::update(float deltaTime)
 {
    UpdateMusicStream(mGameState.bgm);
 
+   // Player update runs first, which will set its collision flags
    mGameState.player->update(
-      deltaTime,      
-      mGameState.player, 
-      mGameState.map, 
-      mGameState.enemies,    
-      mGameState.enemyCount  
+      deltaTime,
+      mGameState.player,
+      mGameState.map,
+      nullptr,   // Do not resolve physics against boss; handle manually below
+      0
    );
 
+   // Boss update
    for (int i = 0; i < mGameState.enemyCount; i++)
    {
        mGameState.enemies[i].update(
@@ -107,8 +108,31 @@ void LevelFour::update(float deltaTime)
    {
        if (mGameState.enemies[i].isActive() && mGameState.player->isColliding(&mGameState.enemies[i]))
        {
-           handlePlayerDeath(); 
-           return; 
+           // Player is touching the boss. Check HOW:
+           // Stomp if the player is falling AND the player's bottom is above the boss's top (with small epsilon)
+           bool isPlayerFalling = mGameState.player->getVelocity().y > 0;
+           Vector2 playerPos = mGameState.player->getPosition();
+           Vector2 enemyPos  = mGameState.enemies[i].getPosition();
+           Vector2 playerDim = mGameState.player->getColliderDimensions();
+           Vector2 enemyDim  = mGameState.enemies[i].getColliderDimensions();
+           float playerBottom = playerPos.y + playerDim.y / 2.0f;
+           float enemyTop     = enemyPos.y  - enemyDim.y  / 2.0f;
+           const float epsilon = 2.0f;
+
+           if (isPlayerFalling && playerBottom <= enemyTop + epsilon)
+           {
+               // --- WIN CONDITION: Player stomped the boss ---
+               PlaySound(mGameState.winSound);
+               mGameState.nextSceneID = 5; // Go to WinScene
+               mGameState.enemies[i].deactivate(); // Stop the boss
+               return; // Exit update
+           }
+           else
+           {
+               // --- LOSE CONDITION: Player hit side or bottom ---
+               handlePlayerDeath(); 
+               return; 
+           }
        }
    }
 
@@ -119,13 +143,13 @@ void LevelFour::update(float deltaTime)
        return; 
    }
 
-   // Win Condition: Reach the right wall
-   float levelEndX = mGameState.map->getRightBoundary() - TILE_DIMENSION * 2;
-   if (mGameState.player->getPosition().x > levelEndX)
-   {
-       PlaySound(mGameState.winSound);
-       mGameState.nextSceneID = 5; // Go to WinScene (index 5)
-   }
+   // --- OLD WIN CONDITION (REMOVED) ---
+   // float levelEndX = mGameState.map->getRightBoundary() - TILE_DIMENSION * 2;
+   // if (mGameState.player->getPosition().x > levelEndX)
+   // {
+   //     PlaySound(mGameState.winSound);
+   //     mGameState.nextSceneID = 5; // Go to WinScene (index 5)
+   // }
 
    // Camera Panning
    Vector2 currentPlayerPosition = { mGameState.player->getPosition().x, mOrigin.y };

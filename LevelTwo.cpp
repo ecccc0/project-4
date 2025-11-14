@@ -15,13 +15,11 @@ void LevelTwo::initialise()
     mGameState.enemyCount = 0;
     mGameState.enemies = nullptr;
 
-    mGameState.bgm = LoadMusicStream("assets/game/07 - Final Defeat.wav"); // Final BGM
-    SetMusicVolume(mGameState.bgm, 0.33f);
-    PlayMusicStream(mGameState.bgm);
+    // BGM is handled globally in main.cpp now
 
-    mGameState.jumpSound = LoadSound("assets/game/Dirt Jump.wav");
-    mGameState.deathSound = LoadSound("assets/game/Death Sound.wav");
-    mGameState.winSound  = LoadSound("assets/game/level_win.wav");
+    mGameState.jumpSound = LoadSound("assets/Dirt Jump.wav");
+    mGameState.deathSound = LoadSound("assets/Death Sound.ogg");
+    mGameState.winSound  = LoadSound("assets/level_win.wav");
 
    /*
       ----------- MAP -----------
@@ -46,7 +44,7 @@ void LevelTwo::initialise()
     );
    
     mGameState.player->setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
-    mGameState.player->setJumpingPower(700.0f); 
+    mGameState.player->setJumpingPower(500.0f); 
     
     /*
         ----------- ENEMIES -----------
@@ -57,6 +55,7 @@ void LevelTwo::initialise()
    // Spawn a WANDERER (default construct then configure)
     mGameState.enemies[0].setPosition({ mOrigin.x - TILE_DIMENSION * 2, mOrigin.y - TILE_DIMENSION * 2 });
     mGameState.enemies[0].setScale({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
+    mGameState.enemies[0].setColliderDimensions({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
     mGameState.enemies[0].setTexture("assets/enemy_wander.png");
     mGameState.enemies[0].setEntityType(NPC);
     mGameState.enemies[0].setAIType(WANDERER);
@@ -67,6 +66,7 @@ void LevelTwo::initialise()
    // Spawn a FOLLOWER
     mGameState.enemies[1].setPosition({ mOrigin.x + TILE_DIMENSION * 3, mOrigin.y - TILE_DIMENSION * 4 });
     mGameState.enemies[1].setScale({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
+    mGameState.enemies[1].setColliderDimensions({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
     mGameState.enemies[1].setTexture("assets/enemy_follow.png");
     mGameState.enemies[1].setEntityType(NPC);
     mGameState.enemies[1].setAIType(FOLLOWER);
@@ -77,6 +77,7 @@ void LevelTwo::initialise()
    // Spawn a FLYER
     mGameState.enemies[2].setPosition({ mOrigin.x + TILE_DIMENSION * 6, mOrigin.y - TILE_DIMENSION * 3 });
     mGameState.enemies[2].setScale({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
+    mGameState.enemies[2].setColliderDimensions({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
     mGameState.enemies[2].setTexture("assets/enemy_fly.png");
     mGameState.enemies[2].setEntityType(NPC);
     mGameState.enemies[2].setAIType(FLYER);
@@ -134,6 +135,7 @@ void LevelTwo::update(float deltaTime)
     float levelEndX = mGameState.map->getRightBoundary() - TILE_DIMENSION;
     if (mGameState.player->getPosition().x > levelEndX)
     {
+        PlaySound(mGameState.winSound);
         mGameState.nextSceneID = 3; // Go to WinScene (index 3)
     }
 

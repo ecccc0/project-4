@@ -34,6 +34,9 @@ LoseScene *gLoseScene = nullptr;
 int gLives = 3;
 int gCurrentLevelIndex = 0;
 
+// Global BGM (persistent across scenes)
+Music gBGM = {};
+
 // Function Declarations
 void switchToScene(int sceneIndex);
 void handlePlayerDeath(); // Added this declaration
@@ -79,6 +82,11 @@ void initialise()
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Scenes");
     InitAudioDevice();
 
+    // Load and start global background music once
+    gBGM = LoadMusicStream("assets/Morning.mp3");
+    SetMusicVolume(gBGM, 0.33f);
+    PlayMusicStream(gBGM);
+
     // Create all scenes
     gMenuScene = new MenuScene(ORIGIN, "#4A4A4A"); // Menu
     gLevelOne = new LevelOne(ORIGIN, "#C0897E");
@@ -101,6 +109,8 @@ void initialise()
     switchToScene(0);
 
     SetTargetFPS(FPS);
+    
+
 }
 
 void processInput() 
@@ -132,6 +142,8 @@ void processInput()
 
 void update() 
 {
+    // Keep global music streaming
+    UpdateMusicStream(gBGM);
     float ticks = (float) GetTime();
     float deltaTime = ticks - gPreviousTicks;
     gPreviousTicks  = ticks;
@@ -161,6 +173,16 @@ void render()
         BeginMode2D(gCurrentScene->getState().camera);
         gCurrentScene->render();
         EndMode2D();
+
+        // Global HUD overlay (not affected by camera)
+        char hud[64];
+        {
+            std::string s = "Health: " + std::to_string(gLives);
+            size_t copyLen = s.size() < (sizeof(hud) - 1) ? s.size() : (sizeof(hud) - 1);
+            memcpy(hud, s.c_str(), copyLen);
+            hud[copyLen] = '\0';
+        }
+        DrawText(hud, 20, 20, 24, WHITE);
     }
     else
     {
@@ -173,6 +195,12 @@ void render()
 
 void shutdown() 
 {
+    // Unload persistent global music
+    if (gBGM.ctxData)
+    {
+        StopMusicStream(gBGM);
+        UnloadMusicStream(gBGM);
+    }
     delete gMenuScene;
     delete gLevelOne;
     delete gLevelTwo;

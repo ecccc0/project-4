@@ -15,13 +15,12 @@ void LevelOne::initialise()
     mGameState.enemyCount = 0;
     mGameState.enemies = nullptr;
 
-    mGameState.bgm = LoadMusicStream("assets/game/04 - Silent Forest.wav");
-    SetMusicVolume(mGameState.bgm, 0.33f);
-    PlayMusicStream(mGameState.bgm);
+    // BGM is handled globally in main.cpp now
 
-    mGameState.jumpSound = LoadSound("assets/game/Dirt Jump.wav");
-    mGameState.deathSound = LoadSound("assets/game/Death Sound.wav");
-    mGameState.winSound  = LoadSound("assets/game/level_win.wav");
+
+    mGameState.jumpSound = LoadSound("assets/Dirt Jump.wav");
+    mGameState.deathSound = LoadSound("assets/Death Sound.ogg");
+    mGameState.winSound  = LoadSound("assets/level_win.wav");
 
    /*
       ----------- MAP -----------
@@ -47,7 +46,7 @@ void LevelOne::initialise()
     );
     
     mGameState.player->setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
-    mGameState.player->setJumpingPower(700.0f); 
+    mGameState.player->setJumpingPower(500.0f); 
     
     /*
         ----------- ENEMIES -----------
@@ -59,6 +58,7 @@ void LevelOne::initialise()
     // The array allocation already default-constructs each Entity
     mGameState.enemies[0].setPosition({ mOrigin.x + TILE_DIMENSION, mOrigin.y - TILE_DIMENSION * 2 });
     mGameState.enemies[0].setScale({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
+    mGameState.enemies[0].setColliderDimensions({ TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f });
     mGameState.enemies[0].setTexture("assets/enemy_wander.png");
     mGameState.enemies[0].setEntityType(NPC);
     mGameState.enemies[0].setAIType(WANDERER);
@@ -123,6 +123,7 @@ void LevelOne::update(float deltaTime)
     float levelEndX = mGameState.map->getRightBoundary() - TILE_DIMENSION;
     if (mGameState.player->getPosition().x > levelEndX)
     {
+        PlaySound(mGameState.winSound);
         mGameState.nextSceneID = 2; // Go to LevelTwo
     }
 

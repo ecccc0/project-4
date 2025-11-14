@@ -272,9 +272,8 @@ void Entity::update(float deltaTime, Entity *player, Map *map,
     mVelocity.x = mMovement.x * mSpeed;
 
     mVelocity.x += mAcceleration.x * deltaTime;
-    mVelocity.y += mAcceleration.y * deltaTime;
-    
 
+    // Apply gravity only to non-flyers and the player
     if (mAIType != FLYER || mEntityType == PLAYER)
     {
         mVelocity.y += mAcceleration.y * deltaTime;

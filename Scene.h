@@ -6,8 +6,8 @@
 struct GameState
 {
     Entity *player;
-    Entity *enemies;    // Added
-    int enemyCount;     // Added
+    Entity *enemies;    
+    int enemyCount;   
     
     Map *map;
 
