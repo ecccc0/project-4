@@ -5,11 +5,17 @@
 
 struct GameState
 {
-    Entity *;
+    Entity *player;
+    Entity *enemies;    // Added
+    int enemyCount;     // Added
+    
     Map *map;
 
     Music bgm;
     Sound jumpSound;
+    Sound deathSound;
+    Sound winSound;
+    
 
     Camera2D camera;
 
@@ -32,7 +38,8 @@ public:
     virtual void render() = 0;
     virtual void shutdown() = 0;
     
-    GameState   getState()           const { return mGameState; }
+    GameState&  getState()                 { return mGameState; }
+    const GameState& getState() const     { return mGameState; }
     Vector2     getOrigin()          const { return mOrigin;    }
     const char* getBGColourHexCode() const { return mBGColourHexCode; }
 };

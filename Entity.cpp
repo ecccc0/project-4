@@ -4,7 +4,7 @@ Entity::Entity() : mPosition {0.0f, 0.0f}, mMovement {0.0f, 0.0f},
                    mVelocity {0.0f, 0.0f}, mAcceleration {0.0f, 0.0f},
                    mScale {DEFAULT_SIZE, DEFAULT_SIZE},
                    mColliderDimensions {DEFAULT_SIZE, DEFAULT_SIZE}, 
-                   mTexture {NULL}, mTextureType {SINGLE}, mAngle {0.0f},
+                   mTexture {}, mTextureType {SINGLE}, mAngle {0.0f},
                    mSpriteSheetDimensions {}, mDirection {RIGHT}, 
                    mAnimationAtlas {{}}, mAnimationIndices {}, mFrameSpeed {0},
                    mEntityType {NONE} { }
@@ -202,7 +202,22 @@ void Entity::animate(float deltaTime)
     }
 }
 
-void Entity::AIWander() { moveLeft(); }
+void Entity::AIWander() 
+{ 
+    // If we hit a wall on the left, move right
+    if (mDirection == LEFT && (mIsCollidingLeft || mIsCollidingBottom == false)) {
+        moveRight();
+    }
+    // If we hit a wall on the right, move left
+    else if (mDirection == RIGHT && (mIsCollidingRight || mIsCollidingBottom == false)) {
+        moveLeft();
+    }
+    
+    // If we have no movement (e.g., at spawn), default to moving left
+    if (GetLength(mMovement) == 0.0f) {
+        moveLeft();
+    }
+}
 
 void Entity::AIFollow(Entity *target)
 {
@@ -236,6 +251,10 @@ void Entity::AIActivate(Entity *target)
         AIFollow(target);
         break;
     
+    case FLYER:     // Added this case
+        AIWander(); // Flyers will also patrol
+        break;
+    
     default:
         break;
     }
@@ -254,6 +273,12 @@ void Entity::update(float deltaTime, Entity *player, Map *map,
 
     mVelocity.x += mAcceleration.x * deltaTime;
     mVelocity.y += mAcceleration.y * deltaTime;
+    
+
+    if (mAIType == FLYER)
+    {
+        mVelocity.y += mAcceleration.y * deltaTime;
+    }
 
     // ––––– JUMPING ––––– //
     if (mIsJumping)

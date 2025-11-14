@@ -1,19 +1,31 @@
-#include "LevelThree.h"
+#include "LevelThree.h" // Includes Scene.h
 
 #ifndef LEVELFOUR_H
 #define LEVELFOUR_H
 
-constexpr int LEVEL_WIDTH = ,
-              LEVEL_HEIGHT = ;
+// Boss Arena dimensions
+constexpr int LEVELFOUR_WIDTH = 18,
+              LEVELFOUR_HEIGHT = 10;
 
 class LevelFour : public Scene {
 private:
-    unsigned int mLevelData[LEVEL_WIDTH * LEVEL_HEIGHT] = {
-        
+    // 18x10 Boss Arena Layout
+    unsigned int mLevelData[LEVELFOUR_WIDTH * LEVELFOUR_HEIGHT] = {
+        12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12,
+        12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12,
+        12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12,
+        12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12,
+        12, 0, 0, 0, 0, 3, 3, 3, 0, 0, 3, 3, 3, 0, 0, 0, 0, 12,
+        12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12,
+        12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12,
+        12, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 12,
+        12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,
+        12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12
+        // 3 = top tile, 12 = bottom/wall tile, 0 = empty
     };
 
 public:
-    static constexpr float TILE_DIMENSION       = ,
+    static constexpr float TILE_DIMENSION       = 64.0f,
                         ACCELERATION_OF_GRAVITY = 981.0f,
                         END_GAME_THRESHOLD      = 800.0f;
 

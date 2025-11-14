@@ -7,72 +7,85 @@ LevelThree::~LevelThree() { shutdown(); }
 
 void LevelThree::initialise()
 {
-   mGameState.nextSceneID = 0;
+    // Start with no automatic scene change; let gameplay decide when to switch
+    mGameState.nextSceneID = -1;
 
-   mGameState.bgm = LoadMusicStream("");
-   SetMusicVolume(mGameState.bgm, 0.33f);
-   // PlayMusicStream(gState.bgm);
+    mGameState.bgm = LoadMusicStream("");
+    SetMusicVolume(mGameState.bgm, 0.33f);
+    // PlayMusicStream(gState.bgm);
 
-   mGameState.jumpSound = LoadSound("");
+    mGameState.jumpSound = LoadSound("");
+    mGameState.deathSound = LoadSound("");
+    mGameState.winSound  = LoadSound("");
 
-   /*
-      ----------- MAP -----------
-   */
-   mGameState.map = new Map(
-      LEVEL_WIDTH, LEVEL_HEIGHT,   // map grid cols & rows
-      (unsigned int *) mLevelData, // grid data
-      ,   // texture filepath
-      TILE_DIMENSION,              // tile size
-                              // texture cols & rows
-      mOrigin                      // in-game origin
-   );
+    /*
+        ----------- MAP -----------
+    */
+    mGameState.map = new Map(
+        LEVELTHREE_WIDTH, LEVELTHREE_HEIGHT,   // map grid cols & rows
+        (unsigned int *) mLevelData, // grid data
+        "assets/tileset.png",   // texture filepath
+        TILE_DIMENSION,              // tile size
+        9, 4,                        // texture cols & rows
+        mOrigin                      // in-game origin
+    );
 
-   /*
-      ----------- PROTAGONIST -----------
-   */
-   
-   /*
-      ----------- CAMERA -----------
-   */
-   mGameState.camera = { 0 };                                    // zero initialize
-   mGameState.camera.target = mGameState.->getPosition(); // camera follows player
-   mGameState.camera.offset = mOrigin;                           // camera offset to center of screen
-   mGameState.camera.rotation = 0.0f;                            // no rotation
-   mGameState.camera.zoom = 1.0f;                                // default zoom
+    /*
+        ----------- PROTAGONIST -----------
+    */
+    mGameState.player = new Entity(
+        { mOrigin.x - (LEVELONE_WIDTH * TILE_DIMENSION / 4.0f), mOrigin.y - 50.0f }, 
+        { TILE_DIMENSION * 0.8f, TILE_DIMENSION * 0.8f }, 
+        "assets/player.png",     
+        PLAYER
+    );
+    
+    /*
+        ----------- CAMERA -----------
+    */
+    mGameState.camera = { 0 };                                    // zero initialize
+    mGameState.camera.target = mGameState.player->getPosition(); // camera follows player
+    mGameState.camera.offset = mOrigin;                           // camera offset to center of screen
+    mGameState.camera.rotation = 0.0f;                            // no rotation
+    mGameState.camera.zoom = 1.0f;                                // default zoom
 }
 
 void LevelThree::update(float deltaTime)
 {
-   UpdateMusicStream(mGameState.bgm);
+    UpdateMusicStream(mGameState.bgm);
 
-   mGameState.->update(
-      deltaTime,      // delta time / fixed timestep
-      nullptr,        // player
-      mGameState.map, // map
-      nullptr,        // collidable entities
-      0               // col. entity count
-   );
+    mGameState.player->update(
+        deltaTime,      // delta time / fixed timestep
+        nullptr,        // player
+        mGameState.map, // map
+        nullptr,        // collidable entities
+        0               // col. entity count
+    );
 
-   Vector2 currentPlayerPosition = { mGameState.->getPosition().x, mOrigin.y };
+    Vector2 currentPlayerPosition = { mGameState.player->getPosition().x, mOrigin.y };
 
-   if (mGameState.->getPosition().y > 800.0f) mGameState.nextSceneID = 1;
+    if (mGameState.player->getPosition().y > 800.0f) mGameState.nextSceneID = 4;
 
-   panCamera(&mGameState.camera, &currentPlayerPosition);
+    panCamera(&mGameState.camera, &currentPlayerPosition);
 }
 
 void LevelThree::render()
 {
-   ClearBackground(ColorFromHex(mBGColourHexCode));
+    ClearBackground(ColorFromHex(mBGColourHexCode));
 
-   mGameState.->render();
-   mGameState.map->render();
+    mGameState.player->render();
+    mGameState.map->render();
 }
 
 void LevelThree::shutdown()
 {
-   delete mGameState.;
-   delete mGameState.map;
+    // Clean up player/enemies if present
+    if (mGameState.player) delete mGameState.player;
+    if (mGameState.enemies) delete[] mGameState.enemies;
+    delete mGameState.map;
 
-   UnloadMusicStream(mGameState.bgm);
-   UnloadSound(mGameState.jumpSound);
+    UnloadMusicStream(mGameState.bgm);
+    UnloadSound(mGameState.jumpSound);
+    UnloadSound(mGameState.deathSound);
+    UnloadSound(mGameState.winSound);
 }

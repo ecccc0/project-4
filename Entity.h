@@ -6,7 +6,7 @@
 enum Direction    { LEFT, UP, RIGHT, DOWN              }; // For walking
 enum EntityStatus { ACTIVE, INACTIVE                   };
 enum EntityType   { PLAYER, BLOCK, PLATFORM, NPC, NONE };
-enum AIType       { WANDERER, FOLLOWER                 };
+enum AIType       { WANDERER, FOLLOWER, FLYER          };
 enum AIState      { WALKING, IDLE, FOLLOWING           };
 
 class Entity
@@ -49,7 +49,7 @@ private:
     AIType  mAIType;
     AIState mAIState;
 
-    bool isColliding(Entity *other) const;
+    // bool isColliding(Entity *other) const; // Moved from private
 
     void checkCollisionY(Entity *collidableEntities, int collisionCheckCount);
     void checkCollisionY(Map *map);
@@ -96,6 +96,8 @@ public:
     void displayCollider();
 
     bool isActive() { return mEntityStatus == ACTIVE ? true : false; }
+    
+    bool isColliding(Entity *other) const; // Moved to public
 
     void moveUp()    { mMovement.y = -1; mDirection = UP;    }
     void moveDown()  { mMovement.y =  1; mDirection = DOWN;  }

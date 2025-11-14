@@ -1,5 +1,5 @@
 # Source and target
-SRCS = main.cpp cs3113.cpp Entity.cpp LevelOne.cpp LevelTwo.cpp LevelThree.cpp LevelFour.cpp Map.cpp Scene.cpp
+SRCS = main.cpp cs3113.cpp Entity.cpp LevelOne.cpp LevelTwo.cpp LevelThree.cpp LevelFour.cpp Map.cpp Scene.cpp MenuScene.cpp WinScene.cpp LoseScene.cpp
 TARGET = raylib_app
 
 # OS detection - Windows MinGW doesn't have uname, so we detect Windows differently
